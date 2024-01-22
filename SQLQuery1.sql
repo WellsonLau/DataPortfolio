@@ -6,6 +6,8 @@ Select location, date, total_cases, new_cases, total_deaths, population
 from PortfolioProject..CovidDeaths$
 order by 1
 
+------------- DATA EXPLORATION -------------
+
 -- Finding the total deaths out of the total cases
 -- Estimates the chance of dying if you have COVID
 Select location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 as deathPercent
@@ -106,3 +108,32 @@ where death.continent is not null
 
 Select *
 From test
+
+------- Queries for Tableau Visualization -------
+
+-- 1. Global Death Percentage for new cases --
+SELECT SUM(new_cases) as totalNewCases, SUM(cast(new_deaths as int)) as totalNewDeaths, 
+(SUM(cast(new_deaths as int)) / SUM(new_cases)) * 100 as deathPercentage
+from PortfolioProject..CovidDeaths$
+
+-- 2. Total new deaths per continent --
+SELECT location, SUM(cast(new_deaths as int)) as totalDeaths
+from PortfolioProject..CovidDeaths$
+where continent is null
+and location not in ('World', 'European Union', 'International')
+group by location
+order by totalDeaths desc
+
+-- 3. Infection Rate for countries --
+Select location, population, MAX(total_cases) as highestInfection, MAX((total_cases/population))*100 as percentInfected
+from PortfolioProject..CovidDeaths$
+GROUP BY location, population
+order by percentInfected DESC
+
+-- 4. Infection Rate for specified countries with. Same as #3, but with a date to keep track of infected timeline --
+Select location, population, date, MAX(total_cases) as highestInfection, MAX((total_cases/population))*100 as percentInfected
+from PortfolioProject..CovidDeaths$
+where continent is null
+and location not in ('World', 'European Union', 'International')
+GROUP BY location, population, date
+order by percentInfected DESC
